@@ -47,7 +47,7 @@ export function SkillCard({
       onSelect();
     }
   };
-  const tint = hasUpdate ? "var(--warning)" : selected ? "var(--primary)" : "var(--ink)";
+  const tint = hasUpdate ? "var(--warning)" : selected ? "var(--primary)" : "var(--foreground)";
   const refresh = (event: MouseEvent) => {
     event.stopPropagation();
     void mutations.refresh(skill.name);
