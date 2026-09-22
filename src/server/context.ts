@@ -26,6 +26,12 @@ export interface RegistryMiss {
   fetchedAt: number;
 }
 
+/** Star count for one repo, cached under `stars:<source>`. */
+export interface StarStat {
+  stars: number;
+  fetchedAt: number;
+}
+
 export interface RegistryStat {
   id: string;
   source: string;
@@ -132,15 +138,15 @@ export class Context {
     await this.bb.storage.kv.set(UPDATE_CACHE_KEY, current);
   }
 
-  async readRegistry(): Promise<Record<string, RegistryStat | RegistryMiss>> {
-    const raw = (await this.bb.storage.kv.get<Record<string, RegistryStat | RegistryMiss | null>>(REGISTRY_CACHE_KEY)) ?? {};
+  async readRegistry(): Promise<Record<string, RegistryStat | RegistryMiss | StarStat>> {
+    const raw = (await this.bb.storage.kv.get<Record<string, RegistryStat | RegistryMiss | StarStat | null>>(REGISTRY_CACHE_KEY)) ?? {};
     // Older builds stored misses as null; treat those as stale.
-    const cache: Record<string, RegistryStat | RegistryMiss> = {};
+    const cache: Record<string, RegistryStat | RegistryMiss | StarStat> = {};
     for (const [key, value] of Object.entries(raw)) if (value !== null) cache[key] = value;
     return cache;
   }
 
-  private isFresh(entry: RegistryStat | RegistryMiss | undefined, now: number): boolean {
+  private isFresh(entry: RegistryStat | RegistryMiss | StarStat | undefined, now: number): boolean {
     return entry !== undefined && now - entry.fetchedAt < REGISTRY_TTL_MS;
   }
 
@@ -150,7 +156,7 @@ export class Context {
    * they are not looked up again until the TTL passes. Failures are swallowed:
    * the page must never depend on the registry being reachable.
    */
-  private async fillRegistryStats(cache: Record<string, RegistryStat | RegistryMiss>, ids: string[]): Promise<void> {
+  private async fillRegistryStats(cache: Record<string, RegistryStat | RegistryMiss | StarStat>, ids: string[]): Promise<void> {
     const now = Date.now();
     const stale = ids.filter((id) => !this.isFresh(cache[id], now));
     if (stale.length === 0) return;
@@ -175,7 +181,7 @@ export class Context {
    * Fill `cache` with the best skills.sh match by name for skills with no
    * recorded source (same skill id, most installs), under `name:<skill>`.
    */
-  private async fillRegistryByName(cache: Record<string, RegistryStat | RegistryMiss>, names: string[]): Promise<void> {
+  private async fillRegistryByName(cache: Record<string, RegistryStat | RegistryMiss | StarStat>, names: string[]): Promise<void> {
     const now = Date.now();
     const stale = names.filter((name) => !this.isFresh(cache[`name:${name}`], now));
     if (stale.length === 0) return;
@@ -196,17 +202,46 @@ export class Context {
     for (let index = 0; index < stale.length; index += 4) await Promise.all(stale.slice(index, index + 4).map(lookup));
   }
 
+  /** Fill `cache` with repo star counts under `stars:<source>`, one request per unique source. */
+  private async fillStars(cache: Record<string, RegistryStat | RegistryMiss | StarStat>, sources: string[]): Promise<void> {
+    const now = Date.now();
+    const stale = [...new Set(sources)].filter((source) => !this.isFresh(cache[`stars:${source}`], now));
+    if (stale.length === 0) return;
+    this.bb.log.debug(`registry: stars for ${stale.length} repo(s)`);
+    const lookup = async (source: string) => {
+      try {
+        const { stars } = await this.bb.sdk.skills.registry.repositoryStars({ source });
+        cache[`stars:${source}`] = { stars, fetchedAt: now };
+      } catch (cause) {
+        this.bb.log.warn(`stars for ${source} failed: ${cause instanceof Error ? cause.message : String(cause)}`);
+      }
+    };
+    for (let index = 0; index < stale.length; index += 4) await Promise.all(stale.slice(index, index + 4).map(lookup));
+  }
+
   /**
    * One read, both lookups, one write: registry figures for tracked ids and
    * name matches for untracked skills. Entries for skills no longer present
    * are dropped so the cache tracks the hub.
    */
-  async registry(ids: string[], names: string[]): Promise<Record<string, RegistryStat | RegistryMiss>> {
+  async registry(ids: string[], names: string[]): Promise<Record<string, RegistryStat | RegistryMiss | StarStat>> {
     const cache = await this.readRegistry();
     const before = JSON.stringify(cache);
     await this.fillRegistryStats(cache, ids);
     await this.fillRegistryByName(cache, names);
-    const keep = new Set([...ids, ...names.map((name) => `name:${name}`)]);
+    // Stars are per repo: every tracked source plus every name match's source.
+    const sources = new Set<string>();
+    for (const id of ids) {
+      const hit = cache[id];
+      if (hit !== undefined && "source" in hit) sources.add(hit.source);
+      else sources.add(id.split("/").slice(0, 2).join("/"));
+    }
+    for (const name of names) {
+      const hit = cache[`name:${name}`];
+      if (hit !== undefined && "source" in hit) sources.add(hit.source);
+    }
+    await this.fillStars(cache, [...sources]);
+    const keep = new Set([...ids, ...names.map((name) => `name:${name}`), ...[...sources].map((source) => `stars:${source}`)]);
     for (const key of Object.keys(cache)) if (!keep.has(key)) delete cache[key];
     if (JSON.stringify(cache) !== before) await this.bb.storage.kv.set(REGISTRY_CACHE_KEY, cache);
     return cache;
@@ -215,7 +250,7 @@ export class Context {
   async markVerified(name: string, verified: "same" | "different"): Promise<void> {
     const cache = await this.readRegistry();
     const hit = cache[`name:${name}`];
-    if (hit === undefined || "miss" in hit) return;
+    if (hit === undefined || !("source" in hit)) return;
     cache[`name:${name}`] = { ...hit, verified };
     await this.bb.storage.kv.set(REGISTRY_CACHE_KEY, cache);
   }

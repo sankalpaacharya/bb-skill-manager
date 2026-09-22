@@ -46,6 +46,10 @@ const skillRowSchema = z.object({
   update: updateCheckSchema.optional(),
   /** skills.sh figures for tracked GitHub skills, when the registry knows them. */
   registry: z.object({ id: z.string(), source: z.string(), installs: z.number(), stars: z.number().nullable(), url: z.string() }).optional(),
+  /** Tracked skill whose registry lookup finished without a match. */
+  registryChecked: z.boolean().optional(),
+  /** Repo stars when the skill itself is not on skills.sh but its repo is known. */
+  stars: z.number().optional(),
   tags: z.array(z.string()),
   cells: z.record(z.string(), cellSchema),
 });

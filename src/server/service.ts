@@ -29,7 +29,7 @@ import {
   type UpdateResult,
 } from "../core";
 import type { RegistrySkillResponse, StatusResponse } from "./contract";
-import { Context, type Config, type RegistryMiss, type RegistryStat } from "./context";
+import { Context, type Config, type RegistryMiss, type RegistryStat, type StarStat } from "./context";
 import { normalizeTag } from "./tags";
 
 export type SyncOutcome = OpResult & { skill: string };
@@ -119,12 +119,12 @@ export class SkillService {
    * upstream, so exact equality is too strict). A confident match records
    * the source. Each skill is compared once per day.
    */
-  async autoResolveSources(config: Config, byName: Record<string, RegistryStat | RegistryMiss>, force = false): Promise<ResolveResult[]> {
+  async autoResolveSources(config: Config, byName: Record<string, RegistryStat | RegistryMiss | StarStat>, force = false): Promise<ResolveResult[]> {
     const results: ResolveResult[] = [];
     for (const row of config.status.skills) {
       if (!row.inHub || row.lock !== undefined || row.hubPath === undefined) continue;
       const stat = byName[`name:${row.name}`];
-      if (stat === undefined || "miss" in stat) {
+      if (stat === undefined || !("source" in stat)) {
         results.push({ skill: row.name, outcome: "no-match", message: "not on skills.sh under this name" });
         continue;
       }
@@ -387,7 +387,7 @@ export function toStatusResponse(
   config: Config,
   tagMap: Record<string, string[]>,
   tags: Array<{ tag: string; count: number }>,
-  registry: Record<string, RegistryStat | RegistryMiss> = {},
+  registry: Record<string, RegistryStat | RegistryMiss | StarStat> = {},
 ): StatusResponse {
   return {
     hub: config.status.hub,
@@ -400,12 +400,19 @@ export function toStatusResponse(
       // Strict JSON on the wire: never emit an undefined-valued key.
       const id = registryIdFor(row);
       const stat = id !== null ? registry[id] : registry[`name:${row.name}`];
+      const hit = stat !== undefined && "source" in stat ? stat : null;
+      const source = hit?.source ?? row.lock?.source ?? null;
+      const starHit = source !== null ? registry[`stars:${source}`] : undefined;
+      const stars = starHit !== undefined && "stars" in starHit && !("source" in starHit) ? starHit.stars : null;
       return {
         ...row,
         ...(update !== undefined ? { update } : {}),
-        ...(stat !== undefined && !("miss" in stat)
-          ? { registry: { id: stat.id, source: stat.source, installs: stat.installs, stars: stat.stars, url: stat.url } }
+        ...(hit !== null
+          ? { registry: { id: hit.id, source: hit.source, installs: hit.installs, stars, url: hit.url } }
           : {}),
+        // Tracked, registry knows the repo but not this skill: the id lookup is settled, no skeleton.
+        ...(hit === null && id !== null && stat !== undefined ? { registryChecked: true } : {}),
+        ...(stars !== null && hit === null ? { stars } : {}),
         tags: tagMap[row.name] ?? [],
       };
     }),

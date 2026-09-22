@@ -75,6 +75,12 @@ export function SkillRow({
                 {formatCount(skill.registry.installs)}
               </span>
             ) : null}
+            {(skill.registry?.stars ?? skill.stars) != null ? (
+              <span className="shrink-0 text-[11px] tabular-nums text-subtle-foreground" title={`${(skill.registry?.stars ?? skill.stars ?? 0).toLocaleString()} stars on GitHub`}>
+                <Icon name="Star" className="mr-0.5 inline size-3 align-[-2px]" />
+                {formatCount(skill.registry?.stars ?? skill.stars ?? 0)}
+              </span>
+            ) : null}
             {skill.tags.map((tag) => (
               <TagChip key={tag} tag={tag} />
             ))}

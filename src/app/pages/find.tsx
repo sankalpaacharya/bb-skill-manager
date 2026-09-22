@@ -87,7 +87,12 @@ function ResultRow({
           {skill.summary !== null ? <span className="mt-0.5 block text-xs text-muted-foreground">{skill.summary}</span> : null}
           <span className="mt-1 flex gap-3 text-[11px] text-subtle-foreground">
             <span>{formatCount(skill.installs)} installs</span>
-            {skill.stars !== null ? <span>{formatCount(skill.stars)} stars</span> : null}
+            {skill.stars !== null ? (
+              <span>
+                <Icon name="Star" className="mr-0.5 inline size-3 align-[-2px]" />
+                {formatCount(skill.stars)}
+              </span>
+            ) : null}
             <a href={skill.url} target="_blank" rel="noreferrer" className="hover:text-foreground">
               skills.sh
             </a>

@@ -78,9 +78,15 @@ export function SkillCard({
                 <Icon name="Download" className="mr-0.5 inline size-3 align-[-2px]" />
                 {formatCount(skill.registry.installs)}
               </span>
-            ) : skill.lock?.sourceType === "github" ? (
+            ) : skill.lock?.sourceType === "github" && skill.registryChecked !== true ? (
               // Figures are still loading for this tracked skill.
               <span aria-hidden className="inline-block h-3 w-8 shrink-0 animate-pulse rounded bg-muted" />
+            ) : null}
+            {(skill.registry?.stars ?? skill.stars) != null ? (
+              <span className="shrink-0 tabular-nums" title={`${(skill.registry?.stars ?? skill.stars ?? 0).toLocaleString()} stars on GitHub`}>
+                <Icon name="Star" className="mr-0.5 inline size-3 align-[-2px]" />
+                {formatCount(skill.registry?.stars ?? skill.stars ?? 0)}
+              </span>
             ) : null}
           </span>
         </span>
