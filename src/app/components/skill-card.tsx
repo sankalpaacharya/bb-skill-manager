@@ -60,35 +60,40 @@ export function SkillCard({
       onKeyDown={onKey}
       aria-expanded={selected}
       className={cn(
-        "group relative flex h-full cursor-pointer flex-col gap-2.5 rounded-lg border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+        "group relative flex h-full cursor-pointer flex-col gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
         selected ? "border-primary/60 bg-surface-selected" : "border-border bg-card hover:bg-state-hover",
         absent && "opacity-60 hover:opacity-100",
       )}
     >
-      <span className="flex items-center gap-2.5">
-        <SkillLogo skill={skill} className="size-8" />
+      {/* Row 1: identity, with stats on the right and hover actions above them */}
+      <span className="flex items-start gap-2.5">
+        <SkillLogo skill={skill} className="size-7" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium">{skill.name}</span>
-          <span className="flex items-center gap-2 text-[11px] text-subtle-foreground">
+          <span className="block truncate text-sm font-medium leading-tight">{skill.name}</span>
+          <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-subtle-foreground">
             <span className="truncate font-mono">
               {skill.lock?.source ?? (skill.registry !== undefined ? `${skill.registry.source}?` : skill.inHub ? "no source recorded" : "not in hub")}
             </span>
-            {skill.registry !== undefined ? (
-              <span className="shrink-0 tabular-nums" title={`${skill.registry.installs.toLocaleString()} installs on skills.sh`}>
-                <Icon name="Download" className="mr-0.5 inline size-3 align-[-2px]" />
-                {formatCount(skill.registry.installs)}
-              </span>
-            ) : skill.lock?.sourceType === "github" && skill.registryChecked !== true ? (
-              // Figures are still loading for this tracked skill.
-              <span aria-hidden className="inline-block h-3 w-8 shrink-0 animate-pulse rounded bg-muted" />
-            ) : null}
-            {(skill.registry?.stars ?? skill.stars) != null ? (
-              <span className="shrink-0 tabular-nums" title={`${(skill.registry?.stars ?? skill.stars ?? 0).toLocaleString()} stars on GitHub`}>
-                <Icon name="Star" className="mr-0.5 inline size-3 align-[-2px]" />
-                {formatCount(skill.registry?.stars ?? skill.stars ?? 0)}
-              </span>
-            ) : null}
+            {skill.tags.map((tag) => (
+              <TagChip key={tag} tag={tag} />
+            ))}
           </span>
+        </span>
+        <span className="flex shrink-0 items-center gap-2.5 pt-0.5 text-xs font-medium text-foreground group-hover:opacity-0 group-focus-within:opacity-0">
+          {skill.registry !== undefined ? (
+            <span className="inline-flex items-center gap-1 tabular-nums" title={`${skill.registry.installs.toLocaleString()} installs on skills.sh`}>
+              <Icon name="Download" className="size-3.5 text-muted-foreground" />
+              {formatCount(skill.registry.installs)}
+            </span>
+          ) : skill.lock?.sourceType === "github" && skill.registryChecked !== true ? (
+            <span aria-hidden className="inline-block h-3.5 w-10 animate-pulse rounded bg-muted" />
+          ) : null}
+          {(skill.registry?.stars ?? skill.stars) != null ? (
+            <span className="inline-flex items-center gap-1 tabular-nums" title={`${(skill.registry?.stars ?? skill.stars ?? 0).toLocaleString()} stars on GitHub`}>
+              <Icon name="Star" className="size-3.5 text-muted-foreground" />
+              {formatCount(skill.registry?.stars ?? skill.stars ?? 0)}
+            </span>
+          ) : null}
         </span>
         <span className="absolute right-2 top-2 flex items-center rounded-md bg-card/90 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
           <TagPicker skill={skill.name} tags={skill.tags} allTags={status.tags} mutations={mutations}>
@@ -115,14 +120,7 @@ export function SkillCard({
           ) : null}
         </span>
       </span>
-      {skill.tags.length > 0 ? (
-        <span className="flex flex-wrap gap-1">
-          {skill.tags.map((tag) => (
-            <TagChip key={tag} tag={tag} />
-          ))}
-        </span>
-      ) : null}
-      <span className="mt-auto flex items-center justify-between gap-2 pt-1">
+      <span className="mt-auto flex items-center justify-between gap-2">
         {focus !== undefined && focusState !== null ? (
           absent ? (
             <>
@@ -163,7 +161,7 @@ export function SkillCard({
             ) : (
               <SkillStatus skill={skill} agents={agents} />
             )}
-            <span className="flex min-w-0 flex-wrap justify-end gap-0.5">
+            <span className="flex min-w-0 flex-wrap justify-end">
               {agents.map((agent) => (
                 <AgentMark key={agent.id} agent={agent} state={skill.cells[agent.id]?.state ?? "missing"} />
               ))}

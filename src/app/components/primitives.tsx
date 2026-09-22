@@ -45,10 +45,10 @@ export function AgentMark({ agent, state }: { agent: Agent; state: CellState }) 
   return (
     <span
       title={`${agent.label}: ${CELL_META[state].title}`}
-      className={cn("relative inline-flex size-5 items-center justify-center", state === "missing" && "opacity-25 grayscale")}
+      className={cn("relative inline-flex size-[18px] items-center justify-center opacity-70", state === "missing" && "opacity-15 grayscale")}
     >
-      <AgentLogo agent={agent} className="size-4" />
-      {state !== "missing" ? <CellDot state={state} className="absolute -right-0.5 -top-0.5 size-1.5 ring-2 ring-card" /> : null}
+      <AgentLogo agent={agent} className="size-3" />
+      {state !== "missing" ? <CellDot state={state} className="absolute -right-px -top-px size-[5px] ring-[1.5px] ring-card" /> : null}
     </span>
   );
 }
