@@ -64,6 +64,12 @@ export function SkillCard({
         selected ? "border-primary/60 bg-surface-selected" : "border-border bg-card hover:bg-state-hover",
         absent && "opacity-60 hover:opacity-100",
       )}
+      style={
+        hasUpdate && !selected
+          ? // A newer version exists upstream: a faint accent wash instead of a button.
+            { backgroundImage: "linear-gradient(135deg, color-mix(in oklab, var(--primary) 9%, transparent), transparent 60%)" }
+          : undefined
+      }
     >
       {/* Row 1: identity, with stats on the right and hover actions above them */}
       <span className="flex items-start gap-2.5">
@@ -113,9 +119,16 @@ export function SkillCard({
           >
             <Icon name="FileText" className="size-3.5" />
           </button>
-          {tracked && !hasUpdate ? (
-            <button type="button" onClick={refresh} disabled={mutations.busy} aria-label={`Check ${skill.name} for updates`} title="Check for updates" className={hoverIcon}>
-              <Icon name="ArrowReloadHorizontal" className="size-3.5" />
+          {tracked ? (
+            <button
+              type="button"
+              onClick={refresh}
+              disabled={mutations.busy}
+              aria-label={hasUpdate ? `Update ${skill.name}` : `Check ${skill.name} for updates`}
+              title={hasUpdate ? "Update to the newer version" : "Check for updates"}
+              className={cn(hoverIcon, hasUpdate && "text-primary")}
+            >
+              <Icon name={hasUpdate ? "ArrowUp" : "ArrowReloadHorizontal"} className="size-3.5" />
             </button>
           ) : null}
         </span>
@@ -147,20 +160,7 @@ export function SkillCard({
           )
         ) : (
           <>
-            {hasUpdate ? (
-              <button
-                type="button"
-                onClick={refresh}
-                disabled={mutations.busy}
-                title="A newer version is available"
-                className="inline-flex h-6 shrink-0 items-center gap-1 rounded-full bg-primary/15 px-2 text-[11px] font-medium text-primary transition-colors hover:bg-primary/25 disabled:opacity-50"
-              >
-                <Icon name="ArrowUp" className="size-3" />
-                Update
-              </button>
-            ) : (
-              <SkillStatus skill={skill} agents={agents} />
-            )}
+            <SkillStatus skill={skill} agents={agents} />
             <span className="flex min-w-0 flex-wrap justify-end">
               {agents.map((agent) => (
                 <AgentMark key={agent.id} agent={agent} state={skill.cells[agent.id]?.state ?? "missing"} />
