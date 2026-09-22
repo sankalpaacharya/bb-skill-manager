@@ -62,14 +62,15 @@ export function SkillCard({
       aria-expanded={selected}
       className={cn(
         "group relative flex h-full cursor-pointer flex-col gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-        selected ? "border-primary/60 bg-surface-selected" : "border-border bg-card hover:bg-state-hover",
+        "hover:brightness-110",
         absent && "opacity-60 hover:opacity-100",
       )}
       style={{
         // Every card: a faint top-left sheen and a matching gradient border.
         // Cards with a newer version upstream use the warning hue for both.
+        // The clip keywords are only valid in the `background` shorthand, not in background-image.
         borderColor: "transparent",
-        backgroundImage: [
+        background: [
           `linear-gradient(135deg, color-mix(in oklab, ${tint} ${hasUpdate ? "7%" : "3%"}, var(--card)), var(--card) 55%) padding-box`,
           `linear-gradient(135deg, color-mix(in oklab, ${tint} ${hasUpdate ? "60%" : "22%"}, var(--border)), var(--border) 70%) border-box`,
         ].join(", "),
