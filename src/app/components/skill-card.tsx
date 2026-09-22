@@ -47,6 +47,7 @@ export function SkillCard({
       onSelect();
     }
   };
+  const tint = hasUpdate ? "var(--warning)" : selected ? "var(--primary)" : "var(--ink)";
   const refresh = (event: MouseEvent) => {
     event.stopPropagation();
     void mutations.refresh(skill.name);
@@ -65,19 +66,13 @@ export function SkillCard({
         absent && "opacity-60 hover:opacity-100",
       )}
       style={{
-        // Every card gets a faint top-left sheen so the grid does not read as flat boxes.
-        backgroundImage: selected
-          ? undefined
-          : "linear-gradient(135deg, color-mix(in oklab, var(--ink) 2.5%, transparent), transparent 45%)",
-        // A newer version upstream: warm gradient border, top-left to bottom-right.
-        ...(hasUpdate && !selected
-          ? {
-              borderColor: "transparent",
-              backgroundImage:
-                "linear-gradient(var(--card), var(--card)) padding-box, " +
-                "linear-gradient(135deg, color-mix(in oklab, var(--warning) 70%, transparent), color-mix(in oklab, var(--warning) 12%, var(--border)) 70%) border-box",
-            }
-          : {}),
+        // Every card: a faint top-left sheen and a matching gradient border.
+        // Cards with a newer version upstream use the warning hue for both.
+        borderColor: "transparent",
+        backgroundImage: [
+          `linear-gradient(135deg, color-mix(in oklab, ${tint} ${hasUpdate ? "7%" : "3%"}, var(--card)), var(--card) 55%) padding-box`,
+          `linear-gradient(135deg, color-mix(in oklab, ${tint} ${hasUpdate ? "60%" : "22%"}, var(--border)), var(--border) 70%) border-box`,
+        ].join(", "),
       }}
     >
       {/* Row 1: identity, with stats on the right and hover actions above them */}
