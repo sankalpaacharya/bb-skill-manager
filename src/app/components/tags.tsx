@@ -4,9 +4,14 @@ import { cn } from "@/lib/utils";
 
 export const UNTAGGED = "__untagged__";
 
-export function TagChip({ tag, onRemove }: { tag: string; onRemove?: () => void }) {
+export function TagChip({ tag, onRemove, small = false }: { tag: string; onRemove?: () => void; small?: boolean }) {
   return (
-    <span className="inline-flex h-5 items-center gap-1 rounded-full bg-muted px-2 text-[11px] leading-none text-muted-foreground">
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full bg-muted leading-none text-muted-foreground",
+        small ? "h-4 px-1.5 text-[10px]" : "h-5 px-2 text-[11px]",
+      )}
+    >
       {tag}
       {onRemove !== undefined ? (
         <button

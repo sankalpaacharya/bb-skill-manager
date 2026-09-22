@@ -85,9 +85,6 @@ export function SkillCard({
             <span className="truncate font-mono">
               {skill.lock?.source ?? (skill.registry !== undefined ? `${skill.registry.source}?` : skill.inHub ? "no source recorded" : "not in hub")}
             </span>
-            {skill.tags.map((tag) => (
-              <TagChip key={tag} tag={tag} />
-            ))}
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-2.5 pt-0.5 text-xs font-medium text-foreground group-hover:opacity-0 group-focus-within:opacity-0">
@@ -165,8 +162,12 @@ export function SkillCard({
           )
         ) : (
           <>
-            <span />
-            <span className="flex min-w-0 flex-wrap justify-end">
+            <span className="flex min-w-0 flex-wrap gap-1">
+              {skill.tags.map((tag) => (
+                <TagChip key={tag} tag={tag} small />
+              ))}
+            </span>
+            <span className="flex shrink-0 flex-wrap justify-end">
               {agents.map((agent) => (
                 <AgentMark key={agent.id} agent={agent} state={skill.cells[agent.id]?.state ?? "missing"} />
               ))}
