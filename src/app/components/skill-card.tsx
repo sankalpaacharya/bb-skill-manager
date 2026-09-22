@@ -68,7 +68,7 @@ export function SkillCard({
         // Every card gets a faint top-left sheen so the grid does not read as flat boxes.
         backgroundImage: selected
           ? undefined
-          : "linear-gradient(135deg, color-mix(in oklab, var(--ink) 5%, transparent), transparent 55%)",
+          : "linear-gradient(135deg, color-mix(in oklab, var(--ink) 2.5%, transparent), transparent 45%)",
         // A newer version upstream: warm gradient border, top-left to bottom-right.
         ...(hasUpdate && !selected
           ? {
