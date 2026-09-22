@@ -64,12 +64,21 @@ export function SkillCard({
         selected ? "border-primary/60 bg-surface-selected" : "border-border bg-card hover:bg-state-hover",
         absent && "opacity-60 hover:opacity-100",
       )}
-      style={
-        hasUpdate && !selected
-          ? // A newer version exists upstream: a faint accent wash instead of a button.
-            { backgroundImage: "linear-gradient(135deg, color-mix(in oklab, var(--primary) 9%, transparent), transparent 60%)" }
-          : undefined
-      }
+      style={{
+        // Every card gets a faint top-left sheen so the grid does not read as flat boxes.
+        backgroundImage: selected
+          ? undefined
+          : "linear-gradient(135deg, color-mix(in oklab, var(--ink) 5%, transparent), transparent 55%)",
+        // A newer version upstream: warm gradient border, top-left to bottom-right.
+        ...(hasUpdate && !selected
+          ? {
+              borderColor: "transparent",
+              backgroundImage:
+                "linear-gradient(var(--card), var(--card)) padding-box, " +
+                "linear-gradient(135deg, color-mix(in oklab, var(--warning) 70%, transparent), color-mix(in oklab, var(--warning) 12%, var(--border)) 70%) border-box",
+            }
+          : {}),
+      }}
     >
       {/* Row 1: identity, with stats on the right and hover actions above them */}
       <span className="flex items-start gap-2.5">
