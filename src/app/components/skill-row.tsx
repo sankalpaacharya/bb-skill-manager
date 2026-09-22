@@ -71,13 +71,13 @@ export function SkillRow({
             {skill.lock !== undefined ? <span className="truncate font-mono text-[11px] text-subtle-foreground">{skill.lock.source}</span> : null}
             {skill.registry !== undefined ? (
               <span className="shrink-0 text-[11px] tabular-nums text-subtle-foreground" title={`${skill.registry.installs.toLocaleString()} installs on skills.sh`}>
-                <Icon name="Download" className="mr-0.5 inline size-3 align-[-2px]" />
+                <Icon name="Download" className="mr-0.5 inline size-3 align-[-2px]" style={{ color: "var(--primary)" }} />
                 {formatCount(skill.registry.installs)}
               </span>
             ) : null}
             {(skill.registry?.stars ?? skill.stars) != null ? (
               <span className="shrink-0 text-[11px] tabular-nums text-subtle-foreground" title={`${(skill.registry?.stars ?? skill.stars ?? 0).toLocaleString()} stars on GitHub`}>
-                <Icon name="Star" className="mr-0.5 inline size-3 align-[-2px]" />
+                <Icon name="Star" className="mr-0.5 inline size-3 align-[-2px]" style={{ color: "var(--warning)" }} />
                 {formatCount(skill.registry?.stars ?? skill.stars ?? 0)}
               </span>
             ) : null}

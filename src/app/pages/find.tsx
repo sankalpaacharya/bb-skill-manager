@@ -89,7 +89,7 @@ function ResultRow({
             <span>{formatCount(skill.installs)} installs</span>
             {skill.stars !== null ? (
               <span>
-                <Icon name="Star" className="mr-0.5 inline size-3 align-[-2px]" />
+                <Icon name="Star" className="mr-0.5 inline size-3 align-[-2px]" style={{ color: "var(--warning)" }} />
                 {formatCount(skill.stars)}
               </span>
             ) : null}

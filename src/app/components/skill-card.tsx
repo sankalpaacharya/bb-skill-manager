@@ -82,7 +82,7 @@ export function SkillCard({
         <span className="flex shrink-0 items-center gap-2.5 pt-0.5 text-xs font-medium text-foreground group-hover:opacity-0 group-focus-within:opacity-0">
           {skill.registry !== undefined ? (
             <span className="inline-flex items-center gap-1 tabular-nums" title={`${skill.registry.installs.toLocaleString()} installs on skills.sh`}>
-              <Icon name="Download" className="size-3.5 text-muted-foreground" />
+              <Icon name="Download" className="size-3.5" style={{ color: "var(--primary)" }} />
               {formatCount(skill.registry.installs)}
             </span>
           ) : skill.lock?.sourceType === "github" && skill.registryChecked !== true ? (
@@ -90,7 +90,7 @@ export function SkillCard({
           ) : null}
           {(skill.registry?.stars ?? skill.stars) != null ? (
             <span className="inline-flex items-center gap-1 tabular-nums" title={`${(skill.registry?.stars ?? skill.stars ?? 0).toLocaleString()} stars on GitHub`}>
-              <Icon name="Star" className="size-3.5 text-muted-foreground" />
+              <Icon name="Star" className="size-3.5" style={{ color: "var(--warning)" }} />
               {formatCount(skill.registry?.stars ?? skill.stars ?? 0)}
             </span>
           ) : null}
