@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { Mutations } from "../hooks/use-mutations";
 import { formatCount } from "../lib/format";
 import type { Agent, Rpc, Skill, Status } from "../lib/types";
-import { AgentMark, Pill, SkillLogo, SkillStatus } from "./primitives";
+import { AgentMark, Pill, SkillLogo } from "./primitives";
 import { CELL_META } from "../lib/meta";
 import { SkillDetail } from "./skill-detail";
 import { TagPicker } from "./tag-picker";
@@ -165,7 +165,7 @@ export function SkillCard({
           )
         ) : (
           <>
-            <SkillStatus skill={skill} agents={agents} />
+            <span />
             <span className="flex min-w-0 flex-wrap justify-end">
               {agents.map((agent) => (
                 <AgentMark key={agent.id} agent={agent} state={skill.cells[agent.id]?.state ?? "missing"} />
