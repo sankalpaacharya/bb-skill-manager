@@ -208,7 +208,6 @@ function UpdateSourceBadge({ group, index }: { group: Summary["updateSources"][n
             className="z-50 w-72 max-w-[calc(100vw-24px)] rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-md"
           >
             <div className="break-words text-sm font-medium">{group.name}</div>
-            <div className="mt-0.5 text-xs text-muted-foreground">{group.skills.length} {group.skills.length === 1 ? "skill" : "skills"} awaiting updates</div>
             <ul className="mt-2 max-h-60 space-y-1.5 overflow-y-auto text-xs" aria-label="Skills awaiting updates">
               {group.skills.map((skill) => (
                 <li key={skill.name} className="break-words">
