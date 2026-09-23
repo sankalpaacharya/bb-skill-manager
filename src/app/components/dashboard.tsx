@@ -131,29 +131,35 @@ function Headline({ summary, selected, onSelect }: { summary: Summary; selected:
   );
 }
 
-/** A tile: label, big number, one-line note, and a segmented bar underneath. */
-function Tile({ label, value, note, segments }: { label: string; value: ReactNode; note: string; segments: Array<{ value: number; tone: string; label: string }> }) {
+/** Shared geometry keeps metrics and their footer visuals aligned. */
+function Tile({ label, value, note, segments = [], children }: { label: string; value: ReactNode; note: string; segments?: Array<{ value: number; tone: string; label: string }>; children?: ReactNode }) {
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
   return (
-    <div className="rounded-xl border border-border bg-card px-5 py-4">
+    <div className="flex min-w-0 flex-col rounded-xl border border-border bg-card px-5 py-4">
       <div className="text-sm text-muted-foreground">{label}</div>
       <div className="mt-1 text-3xl font-semibold leading-none tracking-tight tabular-nums">{value}</div>
       <div className="mt-1.5 text-xs text-muted-foreground">{note}</div>
-      <div className="mt-4 flex h-1.5 gap-[2px] overflow-hidden rounded-full">
-        {total === 0 ? (
-          <span className="h-full flex-1 bg-muted" />
-        ) : (
-          segments
-            .filter((segment) => segment.value > 0)
-            .map((segment) => (
-              <span
-                key={segment.label}
-                title={`${segment.label}: ${segment.value}`}
-                className="h-full rounded-full"
-                style={{ flexGrow: segment.value, backgroundColor: segment.tone }}
-              />
-            ))
-        )}
+      <div className="mt-auto pt-4">
+        <div className="flex min-h-8 items-center">
+          {children ?? (
+            <div className="flex h-1.5 w-full gap-[2px] overflow-hidden rounded-full">
+              {total === 0 ? (
+                <span className="h-full flex-1 bg-muted" />
+              ) : (
+                segments
+                  .filter((segment) => segment.value > 0)
+                  .map((segment) => (
+                    <span
+                      key={segment.label}
+                      title={`${segment.label}: ${segment.value}`}
+                      className="h-full rounded-full"
+                      style={{ flexGrow: segment.value, backgroundColor: segment.tone }}
+                    />
+                  ))
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -183,7 +189,7 @@ export function Dashboard({
     <div className="space-y-4">
       <Headline summary={summary} selected={selectedAgent} onSelect={onSelectAgent} />
 
-      <div className="grid gap-2 lg:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-3">
         <Tile
           label="In sync"
           value={inSync}
@@ -197,22 +203,19 @@ export function Dashboard({
             { value: health.broken, tone: "var(--destructive)", label: "Broken" },
           ]}
         />
-        <div className="min-w-0 rounded-xl border border-border bg-card px-5 py-4 lg:col-span-2">
-          <div className="text-sm text-muted-foreground">Updates</div>
-          <div className="mt-1 text-3xl font-semibold leading-none tracking-tight tabular-nums">{summary.updates}</div>
-          <div className="mt-1.5 text-xs text-muted-foreground">
-            {summary.tracked === 0 ? "record a source to enable checks" : summary.updates === 0 ? "nothing newer upstream" : "newer versions available"}
-          </div>
+        <Tile
+          label="Updates"
+          value={summary.updates}
+          note={summary.tracked === 0 ? "record a source to enable checks" : summary.updates === 0 ? "nothing newer upstream" : "newer versions available"}
+        >
           {summary.updateSources.length > 0 ? (
-            <ul aria-label="Sources with updates available" className="mt-4 flex flex-wrap gap-x-1 gap-y-3">
-              {summary.updateSources.map((group, index) => {
+            <ul aria-label="Sources with updates available" className="flex flex-wrap items-center gap-3 py-1">
+              {summary.updateSources.map((group) => {
                 const label = `${group.name}: ${group.skills.length} skill${group.skills.length === 1 ? "" : "s"} to update\n${group.skills.map((skill) => `${skill.name}${skill.update?.state === "modified-and-update" ? " (edited locally)" : ""}`).join(", ")}`;
                 return (
-                  <li key={group.key} title={label} className="relative shrink-0 pr-2">
-                    <span className="block" style={{ transform: `rotate(${index % 2 === 0 ? -8 : 8}deg)` }}>
-                      <SkillLogo skill={group.skills[0]!} className="size-6 ring-2 ring-card" />
-                    </span>
-                    <span aria-hidden className="absolute -top-1.5 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground px-1 text-[9px] font-semibold leading-none tabular-nums text-background ring-2 ring-card">
+                  <li key={group.key} title={label} className="relative flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary">
+                    <SkillLogo skill={group.skills[0]!} className="size-6" />
+                    <span aria-hidden className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-border bg-secondary px-1 text-[9px] font-semibold leading-none tabular-nums text-foreground ring-2 ring-card">
                       {group.skills.length}
                     </span>
                     <span className="sr-only">{label}</span>
@@ -220,8 +223,8 @@ export function Dashboard({
                 );
               })}
             </ul>
-          ) : null}
-        </div>
+          ) : <span className="text-xs text-muted-foreground">No update sources to show</span>}
+        </Tile>
         <Tile
           label="Gaps"
           value={attention}
