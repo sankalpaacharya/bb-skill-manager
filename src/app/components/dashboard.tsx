@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { Mutations } from "../hooks/use-mutations";
 import { isDrifted } from "../lib/meta";
 import type { Agent, Skill, Status } from "../lib/types";
-import { AgentLogo, SkillLogo, skillHealth, type SkillHealth } from "./primitives";
+import { AgentLogo, SkillLogo, skillHealth, sourceOwner, type SkillHealth } from "./primitives";
 
 // ---------------------------------------------------------------- model ----
 
@@ -21,6 +21,18 @@ export function summarize(status: Status, agents: Agent[], mutations: Mutations)
   const hub = status.skills.filter((skill) => skill.inHub);
   const tracked = hub.filter((skill) => skill.lock !== undefined).length;
   const updates = hub.filter((skill) => skill.update?.state === "update-available" || skill.update?.state === "modified-and-update");
+
+  const updateSources = new Map<string, { key: string; name: string; skills: Skill[] }>();
+  for (const skill of updates) {
+    const owner = sourceOwner(skill);
+    const source = skill.lock?.source ?? skill.name;
+    const key = owner !== null
+      ? `${owner.host}:${owner.owner.toLowerCase()}`
+      : `${skill.lock?.sourceType ?? "unknown"}:${source}`;
+    const group = updateSources.get(key);
+    if (group !== undefined) group.skills.push(skill);
+    else updateSources.set(key, { key, name: owner?.owner ?? source, skills: [skill] });
+  }
 
   const issues: Issue[] = [];
   for (const skill of updates) {
@@ -74,7 +86,7 @@ export function summarize(status: Status, agents: Agent[], mutations: Mutations)
   const health: Record<SkillHealth, number> = { synced: 0, drifted: 0, update: 0, unmanaged: 0, partial: 0, broken: 0 };
   for (const skill of status.skills) health[skillHealth(skill, agents).health]++;
 
-  return { total: status.skills.length, hub: hub.length, tracked, updates: updates.length, updateSkills: updates, issues, missing, coverage, health };
+  return { total: status.skills.length, hub: hub.length, tracked, updates: updates.length, updateSources: [...updateSources.values()], issues, missing, coverage, health };
 }
 
 type Summary = ReturnType<typeof summarize>;
@@ -191,13 +203,18 @@ export function Dashboard({
           <div className="mt-1.5 text-xs text-muted-foreground">
             {summary.tracked === 0 ? "record a source to enable checks" : summary.updates === 0 ? "nothing newer upstream" : "newer versions available"}
           </div>
-          {summary.updateSkills.length > 0 ? (
-            <ul aria-label="Skills with updates available" className="mt-3 flex flex-wrap gap-1.5">
-              {summary.updateSkills.map((skill) => {
-                const label = `${skill.name}${skill.lock?.source ? ` · ${skill.lock.source}` : ""}${skill.update?.state === "modified-and-update" ? " · edited locally" : ""}`;
+          {summary.updateSources.length > 0 ? (
+            <ul aria-label="Sources with updates available" className="mt-4 flex flex-wrap gap-x-1 gap-y-3">
+              {summary.updateSources.map((group, index) => {
+                const label = `${group.name}: ${group.skills.length} skill${group.skills.length === 1 ? "" : "s"} to update\n${group.skills.map((skill) => `${skill.name}${skill.update?.state === "modified-and-update" ? " (edited locally)" : ""}`).join(", ")}`;
                 return (
-                  <li key={skill.name} title={label}>
-                    <SkillLogo skill={skill} className="size-7" />
+                  <li key={group.key} title={label} className="relative shrink-0 pr-2">
+                    <span className="block" style={{ transform: `rotate(${index % 2 === 0 ? -8 : 8}deg)` }}>
+                      <SkillLogo skill={group.skills[0]!} className="size-6 ring-2 ring-card" />
+                    </span>
+                    <span aria-hidden className="absolute -top-1.5 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground px-1 text-[9px] font-semibold leading-none tabular-nums text-background ring-2 ring-card">
+                      {group.skills.length}
+                    </span>
                     <span className="sr-only">{label}</span>
                   </li>
                 );

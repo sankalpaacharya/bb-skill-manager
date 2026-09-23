@@ -101,7 +101,7 @@ export function SegmentedControl<T extends string>({
 // ---------------------------------------------------------------- skills ----
 
 /** Owner of a GitHub/GitLab source, for the avatar. */
-function sourceOwner(skill: Skill): { host: "github" | "gitlab"; owner: string } | null {
+export function sourceOwner(skill: Skill): { host: "github" | "gitlab"; owner: string } | null {
   const lock = skill.lock;
   if (lock === undefined) return null;
   if (lock.sourceType !== "github" && lock.sourceType !== "gitlab") return null;
