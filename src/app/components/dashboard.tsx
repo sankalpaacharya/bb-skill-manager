@@ -1,6 +1,8 @@
 // Dashboard header: the skill count with one chip per agent, and a row of
 // stat tiles. Everything is derived from the current scan.
-import type { ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
+import * as HoverCard from "@radix-ui/react-hover-card";
+import { usePortalScopeProps } from "@/lib/portal-scope";
 import { cn } from "@/lib/utils";
 import type { Mutations } from "../hooks/use-mutations";
 import { isDrifted } from "../lib/meta";
@@ -165,6 +167,63 @@ function Tile({ label, value, note, segments = [], children }: { label: string; 
   );
 }
 
+function UpdateSourceBadge({ group, index }: { group: Summary["updateSources"][number]; index: number }) {
+  const [open, setOpen] = useState(false);
+  const scope = usePortalScopeProps();
+  const listId = useId();
+  const label = `${group.name}: ${group.skills.length} skills to update`;
+  return (
+    <HoverCard.Root open={open} onOpenChange={setOpen} openDelay={150} closeDelay={150}>
+      <HoverCard.Trigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          aria-expanded={open}
+          aria-controls={open ? listId : undefined}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setOpen(false)}
+          onClick={() => setOpen(true)}
+          onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}
+          className="relative flex size-8 shrink-0 items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+        >
+          <span
+            className="flex size-8 items-center justify-center rounded-lg border border-border bg-secondary shadow-sm"
+            style={{ transform: `rotate(${index % 2 === 0 ? -8 : 8}deg)` }}
+          >
+            <SkillLogo skill={group.skills[0]!} className="size-6" />
+          </span>
+          <span aria-hidden className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-border bg-secondary px-1 text-[9px] font-semibold leading-none tabular-nums text-foreground ring-2 ring-card">
+            {group.skills.length}
+          </span>
+        </button>
+      </HoverCard.Trigger>
+      <HoverCard.Portal>
+        <div {...scope}>
+          <HoverCard.Content
+            id={listId}
+            side="top"
+            align="start"
+            sideOffset={10}
+            collisionPadding={12}
+            className="z-50 w-72 max-w-[calc(100vw-24px)] rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-md"
+          >
+            <div className="break-words text-sm font-medium">{group.name}</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">{group.skills.length} {group.skills.length === 1 ? "skill" : "skills"} awaiting updates</div>
+            <ul className="mt-2 max-h-60 space-y-1.5 overflow-y-auto text-xs" aria-label="Skills awaiting updates">
+              {group.skills.map((skill) => (
+                <li key={skill.name} className="break-words">
+                  {skill.name}
+                  {skill.update?.state === "modified-and-update" ? <span className="ml-1 text-muted-foreground">· edited locally</span> : null}
+                </li>
+              ))}
+            </ul>
+          </HoverCard.Content>
+        </div>
+      </HoverCard.Portal>
+    </HoverCard.Root>
+  );
+}
+
 // ----------------------------------------------------------------- root ----
 
 export function Dashboard({
@@ -210,18 +269,11 @@ export function Dashboard({
         >
           {summary.updateSources.length > 0 ? (
             <ul aria-label="Sources with updates available" className="flex flex-wrap items-center gap-3 py-1">
-              {summary.updateSources.map((group) => {
-                const label = `${group.name}: ${group.skills.length} skill${group.skills.length === 1 ? "" : "s"} to update\n${group.skills.map((skill) => `${skill.name}${skill.update?.state === "modified-and-update" ? " (edited locally)" : ""}`).join(", ")}`;
-                return (
-                  <li key={group.key} title={label} className="relative flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary">
-                    <SkillLogo skill={group.skills[0]!} className="size-6" />
-                    <span aria-hidden className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-border bg-secondary px-1 text-[9px] font-semibold leading-none tabular-nums text-foreground ring-2 ring-card">
-                      {group.skills.length}
-                    </span>
-                    <span className="sr-only">{label}</span>
-                  </li>
-                );
-              })}
+              {summary.updateSources.map((group, index) => (
+                <li key={group.key}>
+                  <UpdateSourceBadge group={group} index={index} />
+                </li>
+              ))}
             </ul>
           ) : <span className="text-xs text-muted-foreground">No update sources to show</span>}
         </Tile>
