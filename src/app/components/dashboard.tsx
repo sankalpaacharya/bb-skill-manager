@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { Mutations } from "../hooks/use-mutations";
 import { isDrifted } from "../lib/meta";
 import type { Agent, Skill, Status } from "../lib/types";
-import { AgentLogo, skillHealth, type SkillHealth } from "./primitives";
+import { AgentLogo, SkillLogo, skillHealth, type SkillHealth } from "./primitives";
 
 // ---------------------------------------------------------------- model ----
 
@@ -74,7 +74,7 @@ export function summarize(status: Status, agents: Agent[], mutations: Mutations)
   const health: Record<SkillHealth, number> = { synced: 0, drifted: 0, update: 0, unmanaged: 0, partial: 0, broken: 0 };
   for (const skill of status.skills) health[skillHealth(skill, agents).health]++;
 
-  return { total: status.skills.length, hub: hub.length, tracked, updates: updates.length, issues, missing, coverage, health };
+  return { total: status.skills.length, hub: hub.length, tracked, updates: updates.length, updateSkills: updates, issues, missing, coverage, health };
 }
 
 type Summary = ReturnType<typeof summarize>;
@@ -171,7 +171,7 @@ export function Dashboard({
     <div className="space-y-4">
       <Headline summary={summary} selected={selectedAgent} onSelect={onSelectAgent} />
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 lg:grid-cols-4">
         <Tile
           label="In sync"
           value={inSync}
@@ -185,29 +185,26 @@ export function Dashboard({
             { value: health.broken, tone: "var(--destructive)", label: "Broken" },
           ]}
         />
-        <Tile
-          label="Known sources"
-          value={
-            <>
-              {summary.tracked}
-              <span className="text-lg font-normal text-muted-foreground"> / {summary.hub}</span>
-            </>
-          }
-          note={summary.tracked === summary.hub ? "every hub skill can check for updates" : `${summary.hub - summary.tracked} cannot check for updates`}
-          segments={[
-            { value: summary.tracked, tone: "var(--primary)", label: "Source recorded" },
-            { value: summary.hub - summary.tracked, tone: "var(--muted-foreground)", label: "Unknown origin" },
-          ]}
-        />
-        <Tile
-          label="Updates"
-          value={summary.updates}
-          note={summary.tracked === 0 ? "record a source to enable checks" : summary.updates === 0 ? "nothing newer upstream" : "newer versions available"}
-          segments={[
-            { value: summary.updates, tone: "var(--primary)", label: "Update available" },
-            { value: Math.max(summary.tracked - summary.updates, 0), tone: "var(--success)", label: "Up to date" },
-          ]}
-        />
+        <div className="min-w-0 rounded-xl border border-border bg-card px-5 py-4 lg:col-span-2">
+          <div className="text-sm text-muted-foreground">Updates</div>
+          <div className="mt-1 text-3xl font-semibold leading-none tracking-tight tabular-nums">{summary.updates}</div>
+          <div className="mt-1.5 text-xs text-muted-foreground">
+            {summary.tracked === 0 ? "record a source to enable checks" : summary.updates === 0 ? "nothing newer upstream" : "newer versions available"}
+          </div>
+          {summary.updateSkills.length > 0 ? (
+            <ul aria-label="Skills with updates available" className="mt-3 flex flex-wrap gap-1.5">
+              {summary.updateSkills.map((skill) => {
+                const label = `${skill.name}${skill.lock?.source ? ` · ${skill.lock.source}` : ""}${skill.update?.state === "modified-and-update" ? " · edited locally" : ""}`;
+                return (
+                  <li key={skill.name} title={label}>
+                    <SkillLogo skill={skill} className="size-7" />
+                    <span className="sr-only">{label}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
         <Tile
           label="Gaps"
           value={attention}
