@@ -10,7 +10,7 @@
     "name": "Skill Manager",
     "description": "Manage agent skills across Claude Code, Codex, Pi, OpenCode, Gemini and more from one hub.",
     "branding": {
-      "icon": "./assets/icon.svg"
+      "icon": "./assets/skill-manager.svg"
     },
     "server": "./src/server/index.ts",
     "app": "./src/app/index.tsx",
