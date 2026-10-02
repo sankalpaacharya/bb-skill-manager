@@ -13,7 +13,7 @@ import {
   type SyncMode,
   type UpdateCheck,
 } from "../core";
-import { SKILLS_CHANGED } from "./contract";
+import { SKILLS_CHANGED } from "../shared/events";
 import { TagStore } from "./tags";
 
 const UPDATE_CACHE_KEY = "update-checks";

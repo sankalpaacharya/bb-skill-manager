@@ -18,7 +18,8 @@ import { Context, defineSettings } from "./context";
 import { registerRpc } from "./rpc";
 import { SkillService } from "./service";
 
-export { rpcContract, SKILLS_CHANGED } from "./contract";
+export { SKILLS_CHANGED } from "../shared/events";
+export { rpcContract } from "./contract";
 export type * from "./contract";
 
 export default async function plugin(bb: BbPluginApi): Promise<void> {

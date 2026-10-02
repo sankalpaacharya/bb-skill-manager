@@ -3,8 +3,6 @@
 import { defineRpcContract } from "@get-bb/plugin-sdk";
 import { z } from "zod";
 
-export const SKILLS_CHANGED = "skills-changed";
-
 const cellStateSchema = z.enum(["missing", "linked", "same", "modified", "unmanaged", "external-link", "broken", "hub", "plugin"]);
 const syncModeSchema = z.enum(["link", "copy"]);
 const updateStateSchema = z.enum(["up-to-date", "update-available", "modified", "modified-and-update", "untracked", "error"]);
