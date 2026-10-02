@@ -34,7 +34,7 @@ function formatBytes(bytes: number): string {
 function readableAgents(skill: Skill, agents: Agent[]): Agent[] {
   return agents.filter((agent) => {
     const state = skill.cells[agent.id]?.state ?? "missing";
-    return state === "same" || state === "modified" || state === "unmanaged" || state === "external-link";
+    return state === "same" || state === "modified" || state === "unmanaged" || state === "external-link" || state === "plugin";
   });
 }
 

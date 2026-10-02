@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export const SKILLS_CHANGED = "skills-changed";
 
-const cellStateSchema = z.enum(["missing", "linked", "same", "modified", "unmanaged", "external-link", "broken", "hub"]);
+const cellStateSchema = z.enum(["missing", "linked", "same", "modified", "unmanaged", "external-link", "broken", "hub", "plugin"]);
 const syncModeSchema = z.enum(["link", "copy"]);
 const updateStateSchema = z.enum(["up-to-date", "update-available", "modified", "modified-and-update", "untracked", "error"]);
 
@@ -43,6 +43,8 @@ const skillRowSchema = z.object({
   hubPath: z.string().optional(),
   hubHash: z.string().optional(),
   lock: lockEntrySchema.optional(),
+  /** Provided by a Claude Code plugin; `id` is `<plugin>@<marketplace>`. */
+  plugin: z.object({ id: z.string(), version: z.string().optional() }).optional(),
   update: updateCheckSchema.optional(),
   /** skills.sh figures for tracked GitHub skills, when the registry knows them. */
   registry: z.object({ id: z.string(), source: z.string(), installs: z.number(), stars: z.number().nullable(), url: z.string() }).optional(),

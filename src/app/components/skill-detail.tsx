@@ -146,7 +146,7 @@ function AgentLine({ skill, agent, status, rpc, mutations }: { skill: Skill; age
     add("adopt", "Use this version", () => void mutations.adopt(name, id, true), "destructive");
   }
   if (state === "unmanaged") add("adopt", "Adopt into hub", () => void mutations.adopt(name, id), "default");
-  if (state !== "missing" && state !== "hub") {
+  if (state !== "missing" && state !== "hub" && state !== "plugin") {
     const risky = state === "modified" || state === "unmanaged";
     add("remove", risky ? "Delete" : "Remove", () => void mutations.remove(name, [id], risky), risky ? "destructive" : "outline");
   }

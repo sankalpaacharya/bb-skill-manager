@@ -61,7 +61,7 @@ export function summarize(status: Status, agents: Agent[], mutations: Mutations)
         issues.push({ skill, agent, kind: "modified", text: `${agent.label}'s copy differs from the hub` });
       }
     }
-    if (!skill.inHub) {
+    if (!skill.inHub && skill.plugin === undefined) {
       const owner = agents.find((agent) => skill.cells[agent.id]?.state === "unmanaged");
       issues.push({
         skill,
@@ -85,7 +85,7 @@ export function summarize(status: Status, agents: Agent[], mutations: Mutations)
     return { agent, has, total: hub.length, viaHub, drift };
   });
 
-  const health: Record<SkillHealth, number> = { synced: 0, drifted: 0, update: 0, unmanaged: 0, partial: 0, broken: 0 };
+  const health: Record<SkillHealth, number> = { synced: 0, drifted: 0, update: 0, unmanaged: 0, partial: 0, broken: 0, plugin: 0 };
   for (const skill of status.skills) health[skillHealth(skill, agents).health]++;
 
   return { total: status.skills.length, hub: hub.length, tracked, updates: updates.length, updateSources: [...updateSources.values()], issues, missing, coverage, health };

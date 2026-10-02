@@ -144,12 +144,13 @@ export function SkillLogo({ skill, className }: { skill: Skill; className?: stri
   return <OwnerAvatar owner={owner?.owner ?? null} host={owner?.host} letter={skill.name} className={className} />;
 }
 
-export type SkillHealth = "synced" | "drifted" | "update" | "unmanaged" | "partial" | "broken";
+export type SkillHealth = "synced" | "drifted" | "update" | "unmanaged" | "partial" | "broken" | "plugin";
 
 /** Roll a skill's per-agent states and update check into one badge. */
 export function skillHealth(skill: Skill, agents: Agent[]): { health: SkillHealth; label: string; tone: string } {
   const states = agents.map((agent) => skill.cells[agent.id]?.state ?? "missing");
   if (states.includes("broken")) return { health: "broken", label: "Broken", tone: "var(--destructive)" };
+  if (skill.plugin !== undefined) return { health: "plugin", label: "Plugin", tone: "var(--muted-foreground)" };
   if (!skill.inHub) return { health: "unmanaged", label: "Not in hub", tone: "var(--pr-merged)" };
   if (skill.update?.state === "update-available" || skill.update?.state === "modified-and-update") {
     return { health: "update", label: "Update available", tone: "var(--primary)" };

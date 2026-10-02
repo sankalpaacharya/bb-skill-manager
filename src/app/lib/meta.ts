@@ -18,6 +18,7 @@ export const CELL_META: Record<CellState, StateMeta> = {
   broken: { label: "broken", title: "Dangling link or no SKILL.md", tone: "var(--destructive)" },
   missing: { label: "missing", title: "Not installed", tone: "transparent" },
   hub: { label: "via hub", title: "Reads it from the hub; no link needed", tone: "var(--success)" },
+  plugin: { label: "plugin", title: "Provided by a Claude Code plugin", tone: "var(--muted-foreground)" },
 };
 
 export const UPDATE_META: Record<UpdateState, StateMeta> = {
@@ -29,7 +30,7 @@ export const UPDATE_META: Record<UpdateState, StateMeta> = {
   error: { label: "check failed", title: "Could not reach the source", tone: "var(--destructive)" },
 };
 
-export const CELL_ORDER: CellState[] = ["linked", "hub", "same", "modified", "unmanaged", "external-link", "broken", "missing"];
+export const CELL_ORDER: CellState[] = ["linked", "hub", "same", "modified", "unmanaged", "plugin", "external-link", "broken", "missing"];
 
 export function isDrifted(state: CellState): boolean {
   return state === "modified" || state === "external-link" || state === "broken";

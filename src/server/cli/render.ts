@@ -39,7 +39,7 @@ export const USAGE = [
   "  bb skill-manager tags [tag]                      List tags, or skills carrying one",
   "  bb skill-manager doctor [--json]                 Problems with a fix for each",
   "",
-  "Cell states: link, same, MOD, only, ext, BROKEN, hub (reads the hub natively), -",
+  "Cell states: link, same, MOD, only, ext, BROKEN, hub (reads the hub natively), plugin (Claude Code plugin, read-only), -",
 ].join("\n");
 
 const STATE_GLYPH: Record<CellState, string> = {
@@ -51,6 +51,7 @@ const STATE_GLYPH: Record<CellState, string> = {
   "external-link": "ext",
   broken: "BROKEN",
   hub: "hub",
+  plugin: "plugin",
 };
 
 const UPDATE_GLYPH: Record<UpdateCheck["state"], string> = {

@@ -8,6 +8,7 @@ import { hasSkillMd, readFrontmatter } from "./frontmatter";
 import { hashSkillDir } from "./hash";
 import { lockfilePathForHub, readLockfile, type LockEntry } from "./lockfile";
 import { isDirectory, lstatOrNull, safeRealpath } from "./paths";
+import { listPluginSkills } from "./plugins";
 
 export type CellState =
   | "missing" // the agent has no entry for this skill
@@ -17,7 +18,8 @@ export type CellState =
   | "unmanaged" // present in the agent, but the hub has no such skill
   | "external-link" // symlink to somewhere other than the hub
   | "broken" // dangling symlink, or a directory without SKILL.md
-  | "hub"; // nothing in the agent dir, but the agent reads the hub natively
+  | "hub" // nothing in the agent dir, but the agent reads the hub natively
+  | "plugin"; // shipped by a Claude Code plugin; read-only, the plugin manager owns it
 
 export interface Cell {
   state: CellState;
@@ -37,6 +39,8 @@ export interface SkillRow {
   hubHash?: string;
   /** Lockfile entry, when the hub skill's origin is recorded. */
   lock?: LockEntry;
+  /** Set when a Claude Code plugin provides the skill; `id` is `<plugin>@<marketplace>`. */
+  plugin?: { id: string; version?: string };
   /** Keyed by agent id. */
   cells: Record<string, Cell>;
 }
@@ -177,5 +181,24 @@ export function scanStatus(options: { hub: string; agents: AgentTarget[] }): Sta
       cells,
     });
   }
+
+  const claude = agents.find((agent) => agent.id === "claude");
+  for (const skill of claude === undefined ? [] : listPluginSkills(path.dirname(claude.dir))) {
+    const cells: Record<string, Cell> = {};
+    for (const agent of agents) {
+      cells[agent.id] =
+        agent === claude
+          ? { state: "plugin", path: skill.dir, hash: hashSkillDir(skill.dir) }
+          : { state: "missing", path: path.join(agent.dir, skill.name) };
+    }
+    skills.push({
+      name: skill.name,
+      description: readFrontmatter(skill.dir).description ?? "",
+      inHub: false,
+      plugin: { id: skill.pluginId, ...(skill.version !== undefined ? { version: skill.version } : {}) },
+      cells,
+    });
+  }
+  skills.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   return { hub, hubExists, lockfile, agents, skills };
 }
